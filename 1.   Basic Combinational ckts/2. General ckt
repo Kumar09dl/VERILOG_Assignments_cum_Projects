@@ -1,1 +1,74 @@
+                                               1.  STATIC -1 HAZARD in Y= A_bar.B + AC
+                                                
+          ----------------------------DESIGN ------------------------------
+          module test(a,b,c,y,not_a,w1,w2);
+  input a,b,c;
+  output y;
+  
+inout not_a,w1,w2;
+  
+  not #2 G1(not_a,a);
+  and #4 G2(w1,not_a,b);and #8 G3(w2,a,c);
+  or  G4(y,w1,w2);
+  
+endmodule
+         ---------------------TESTBENCH----------------------
+         module tb;
+  
+  wire y,not_a,w1,w2 ; reg a,b,c;
+  
+  test DUT(.a(a),.b(b),.c(c),.y(y),.not_a(not_a),.w1(w1),.w2(w2));  
+  initial
+    begin              
+    $dumpfile("dump.vcd");
+    $dumpvars(1);
+          a=0;b=1; c=1; 
+      #10 a=1;b=1;c=1;
+      #10 a=0;b=1;c=1;
+      #10 a=1;b=1;c=1;
+    end      
+ 
+initial #40 $finish;  
+endmodule
 
+                                             2.  STATIC -0 HAZARD in Y= (A + B)( A_bar + C)
+                                             ----------------------------DESIGN ------------------------------
+                                             
+module test(a,b,c,y,not_a,w1,w2);
+  input a,b,c;
+  output y;
+  
+inout not_a,w1,w2;
+  
+  not #2 G1(not_a,a);
+  or #4 G2(w1,not_a,c);or #2 G3(w2,a,b);
+  and  G4(y,w1,w2);
+  
+endmodule
+
+                                         ---------------------TESTBENCH----------------------
+                                         
+module tb;
+  
+  wire y,not_a,w1,w2 ; reg a,b,c;
+  
+  test DUT(.a(a),.b(b),.c(c),.y(y),.not_a(not_a),.w1(w1),.w2(w2));
+
+  
+  initial
+    begin    
+          
+    $dumpfile("dump.vcd");
+    $dumpvars(1);
+          a=0;b=0; c=0; 
+      #10 a=1;b=0;c=0;
+      #10 a=0;b=0;c=0;
+      #10 a=1;b=0;c=0;
+    end
+      
+ 
+initial #40 $finish;
+  
+endmodule
+
+                                    3. DYNAMIC HAZARD Y=(W + X)(Y + X_bar) + (X_bar . W_bar . Z)
