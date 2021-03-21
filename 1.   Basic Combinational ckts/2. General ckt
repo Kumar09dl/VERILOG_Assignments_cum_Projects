@@ -72,3 +72,44 @@ initial #40 $finish;
 endmodule
 
                                     3. DYNAMIC HAZARD Y=(W + X)(Y + X_bar) + (X_bar . W_bar . Z)
+                                    ----------------------------DESIGN ------------------------------
+                                    
+
+module test(w,x,y,z,f,not_x,w1,w2,w3,w4);
+  
+  input w,x,z,y;
+  output f;
+  
+inout not_x,w1,w2,w3,w4;
+  
+  not  G1(not_x,x);
+  or #4 G2(w1,w,x);or #8 G3(w2,y,not_x);
+  and  G4(w3,not_x,~w,z);and G5(w4,w1,w2);  
+  or G6(f,w4,w3);
+  
+endmodule
+
+                                             
+                                         ---------------------TESTBENCH----------------------
+                                        
+module tb;
+  
+  wire f,not_x,w1,w2,w3,w4 ; reg x,y,w,z;
+  
+  test DUT(.f(f),.x(x),.y(y),.z(z),.w(w),.not_x(not_x),.w1(w1),.w2(w2),.w3(w3),.w4(w4));
+
+  
+  initial
+    begin    
+          
+    $dumpfile("dump.vcd");
+    $dumpvars(1);
+          x=0;w=0;y=0 ;z=1; 
+      #10 x=1;
+ 
+    end
+      
+ 
+initial #40 $finish;
+  
+endmodule
