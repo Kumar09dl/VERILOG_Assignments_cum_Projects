@@ -1,1 +1,43 @@
 
+
+
+module TB;
+  
+  reg [7:0] a;   reg [3:0] b; reg [1:0] c;  int d;
+  
+  reg [10:0] z;   reg [5:0] y;  int w;
+  
+  initial 
+    begin
+      
+      a=8'd87;  b=4'd13;  c=2'd3;  d= 144;   //initial the operands
+          end
+  
+  initial
+    begin
+      
+      // Arithmetic operations
+      
+      z=a*b+c ;
+      $display("a= %0d b= %0d c= %0d d= %0d z= %0d",a,b,c,d,z);
+      
+      z=a/b ; w= a/c;
+      $display("a= %0d b= %0d c= %0d d= %0d z= %0d w=%0d",a,b,c,d,z,w);
+      
+
+      z=a%b ; w= c**4;
+      $display("a= %0d b= %0d c= %0d d= %0d z= %0d w=%0d",a,b,c,d,z,w);
+      
+      // Reduction operators
+      $display("^a= %0b ~^b= %0b ~&c= %0b |d= %0b ",^a,~^b,~&c,|d);
+      
+      // Shift Operators
+    
+      $display("a= %0d a>>1= %0d a>>2= %0d a>>3= %0d ",a,a>>1,a>>2,a>>3);
+      $display("a= %0d a<<1= %0d a<<2= %0d a<<3= %0d ",a,a<<1,a<<2,a<<3);
+      $display("a= %0d a>>>1= %0d a>>>2= %0d a>>>3= %0d ",a,a>>>1,a>>>2,a>>>3);
+      $display("a= %0d a<<<1= %0d a<<<2= %0d a<<<3= %0d ",a,a<<<1,a<<<2,a<<<3);
+    end
+  
+  
+endmodule
