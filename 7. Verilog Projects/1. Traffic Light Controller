@@ -1,1 +1,227 @@
+                      ---------------------------DESIGN---------------------------------------
+                      
+                      module traffic_light_controller(clk,rst,Nlight,Elight,Wlight,Slight);
+  
+  input clk,rst;                                               // Common clock & reset to all 4 direction traffic lights
+  
+  output reg [2:0] Nlight,Elight,Wlight,Slight;               // Glows R,G,Y in response to respective state
+  
+  reg [1:0] Nstate,Estate,Sstate,Wstate;                      //Stores state of each direction's traffic light
+  
+  parameter  R=2'b00, Y=2'b01, G=2'b10;                      // state of a traffic light
+  
+  reg [5:0] count1;                                         // Counts no. of clock pulses required for operating each state 
+       
+  
+  always @( posedge clk, rst)
+     begin
+       
+      if(!rst)
+       count1<=0;                                            //initialise count to zero
+       
+       else   
+     count1<=count1+1;                                  // increase count by 1 at each clock cycle
+         
+     //  $monitor(" clk=%b rst=%b count1=%0d time=%0d",clk,rst,count1,$time);
+     end
+ 
 
+                          always @(posedge clk, rst)        // North Direction Traffic light 
+    
+    begin
+     
+      if(!rst)
+    
+        Nstate<=1;                                           //Initilaise North TL to Yellow State
+        
+    
+       else           
+                case(Nstate)
+                  
+          Y: if(count1==6'd2)
+               Nstate<=G;
+             else
+               Nstate<=Y;                  
+         
+          G:
+            if(count1==6'd12)
+               Nstate<=R;
+            else
+               Nstate<=G;
+             
+          R: 
+            if(count1==6'd48)
+       begin  Nstate<=Y;  count1<=0;    end                        //If count reaches 48 , reset the counter
+           else
+             Nstate<=R;
+        
+        endcase
+        
+    // $monitor(" clk=%b rst=%b Nstate=%b count1=%0d time=%0d",clk,rst,Nstate,count1,$time);
+       
+    end
+
+
+                          always @(posedge clk, rst)     // East Direction Traffic light 
+    
+    begin
+     
+      if(!rst)
+  
+        Estate<=0; 
+      
+   
+       else
+         
+               case(Estate)
+          R: 
+            if(count1==6'd12)
+               Estate<=Y;
+           else
+             Estate<=R;
+          
+      
+          Y:
+            if(count1==6'd14)
+               Estate<=G;
+           else
+             Estate<=Y;
+           
+           
+      
+          G: 
+            if(count1==6'd24)
+               Estate<=R;
+           else
+             Estate<=G;
+        
+        endcase
+        
+      //$monitor(" clk=%b rst=%b Estate=%b count2=%0d time=%0d",clk,rst,Estate,count2,$time);
+           
+    end
+  
+   
+                        always @(posedge clk, rst)    // South Direction Traffic light 
+    
+    begin
+           if(!rst)    
+        Sstate<=0;        
+       else         
+         case(Sstate)
+           
+          R:
+            if(count1==6'd24)
+               Sstate<=Y;
+           else
+             Sstate<=R;           
+                     
+          Y:
+            if(count1==6'd26)
+               Sstate<=G;
+           else
+             Sstate<=Y;           
+                      
+          G: 
+            if(count1==6'd36)
+               Sstate<=R;
+           else
+             Sstate<=G;
+           
+          endcase
+    //  $monitor(" clk=%b rst=%b Sstate=%b count3=%0d time=%0d",clk,rst,Sstate,count3,$time);
+          
+    end
+  
+  
+   
+                         always @(posedge clk, rst)     // West Direction Traffic light 
+    
+    begin     
+      if(!rst)   
+        Wstate<=0;         
+       else         
+                case(Wstate)
+          R:
+            if(count1==6'd36)
+               Wstate<=Y;
+           else
+             Wstate<=R;
+            
+         Y:
+            if(count1==6'd38)
+               Wstate<=G;
+           else
+             Wstate<=Y;
+           
+                    
+          G: 
+            if(count1==6'd48)
+               Wstate<=R;
+           else
+             Wstate<=G;           
+           
+        endcase
+   //   $display(" clk=%b rst=%b Wstate=%b count4=%0d time=%0d",clk,rst,Wstate,count4,$time);
+            
+    end
+  
+                                   always@(Nstate,rst,Estate,Wstate,Sstate)
+    
+                             if(!rst)
+    
+                 {Nlight,Elight,Wlight,Slight}<=0;   //Initilaise all  lights to zero 
+                           else
+    
+                                           begin
+      case(Nstate)
+      R: Nlight=3'b001;    
+      Y: Nlight=3'b010; 
+      G: Nlight=3'b100;
+    endcase
+      
+      case(Estate)
+      R: Elight=3'b001;    
+      Y: Elight=3'b010; 
+      G: Elight=3'b100;
+    endcase
+      
+      case(Sstate)
+      R: Slight=3'b001;    
+      Y: Slight=3'b010; 
+      G: Slight=3'b100;
+    endcase
+      
+      case(Wstate)
+      R: Wlight=3'b001;    
+      Y: Wlight=3'b010; 
+      G: Wlight=3'b100;
+    endcase
+    
+                                             end   
+  
+
+  endmodule
+ 
+                                                 -------------------------TESTBENCH---------------------------------------
+                                                 
+
+module tb;
+  
+  wire [2:0] Nlight,Elight,Wlight,Slight; reg clk,rst;
+  
+  traffic_light_controller  DUT(.rst(rst),.Nlight(Nlight),.clk(clk),.Elight(Elight),.Wlight(Wlight),.Slight(Slight));
+  
+  initial 
+    begin 
+      $dumpfile("dump.vcd");
+    $dumpvars(1);
+    clk=0; rst=0;  #2 rst=1;         
+      
+end
+  
+      always #5 clk= ~clk;
+ // initial $monitor(" clk=%b rst=%b Nlight=%0d  time=%0d",clk,rst,Nlight,$time);
+  
+   initial #1000 $finish;
+endmodule
