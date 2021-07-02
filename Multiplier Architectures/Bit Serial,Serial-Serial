@@ -1,1 +1,180 @@
 
+-------------------------------------------------DESIGN--------------------------------
+//--------------------------FULL ADDER --------------------------------
+                 module Full_adder(x,y,cin,sum,cout);
+    input     x,y,cin;                      output   sum,cout;
+                assign  {cout,sum} = x+y+cin;  
+            endmodule
+//-----------------------------------------------------------------------
+
+//---------------------------D FLIP-FLOP ---------------------------------
+
+                      module Dff(d,q,clk,rst);
+                  input d,clk,rst;     output reg q;
+  
+                    always@(posedge clk,negedge rst)
+                               if(!rst)
+                                 q <= 1'b0;
+                                   else
+                                  q<=d;
+  
+                        endmodule 
+//--------------------------------------------------------------------
+
+//-----------------N-BIT SERIAL I/P SERIAL O/P REGISTER-----------------------------
+
+                       module siso(clk,rst,si,so);
+                           parameter N=4;
+            
+                 input clk,rst,si;  output reg so;
+                         reg [N-1:0] tmp;   // Register cells
+ 
+            
+                always @(posedge clk,negedge rst )
+
+                              begin
+
+                             if (!rst)
+                   begin  tmp <= 4'd0; 
+                          so  <=4'd0;
+                   end
+                                
+                                else                                  
+                   begin
+                         tmp <= tmp << 1;
+                         tmp[0] <= si;
+                          so <= tmp[N-1];
+                   end
+                                
+                                 end
+               endmodule
+
+//-----------------------------------------------------------------------
+
+
+//-----------------N-BIT SERIAL I/P PARALLEL O/P REGISTER-----------------------
+                      module sipo(clk,rst,si,po);
+                           parameter N=4;
+            
+                        input clk,rst,si;  output  [N-1:0] po;
+                         reg [N-1:0] tmp;   // Register cells
+ 
+                assign po=tmp;
+                        
+                always @(posedge clk,negedge rst )
+
+                              begin
+
+                             if (!rst)
+                   begin  tmp <= 4'd0; 
+                          
+                   end
+                                
+                                else                                  
+                   begin
+                         tmp <= tmp << 1;
+                         tmp[0] <= si;
+                   end
+                                
+                                 end
+               endmodule
+//-----------------------------------------------------------------------
+
+
+//-----------------4 bit Serial Serial multiplier-----------------------
+
+
+module SSM(clk,clk1 , rst,x,y,ctrl ,result,tmpr);
+  
+  input clk,x,rst,y , clk1,ctrl;   output  [7:0] result;
+ 
+  reg cin;  output  [3:0] tmpr;
+  wire [1:0] pp; wire sum , cout ;  
+  wire [3:0] w;
+  
+  Dff d(cout,cin,clk,rst) ;
+  
+  and g0(pp[0],y,x),g1(pp[1],ctrl,w[3]);
+  
+  Full_adder f(pp[0],pp[1],cin,sum,cout);
+
+  sipo ss(clk,rst,sum,w), sp(clk1,rst,w[3],tmpr);
+  
+  assign result[3]=tmpr[0]  , result[2]=tmpr[1]
+    ,result[1]= tmpr[2], result[0]=tmpr[3];
+  
+  assign result[7] = w[0],result[6] = w[1]
+    , result[5] = w[2], result[4] = w[3]; 
+  
+  
+endmodule
+  
+  
+    
+------------------------------------------------TESTBENCH--------------------------------
+
+module tb;
+  
+  
+  wire [7:0] result; reg clk,rst,x,y,clk1,ctrl;
+  wire [3:0] tmpr;
+  
+  SSM DUT(.result(result),.x(x),.y(y) , .clk1(clk1) ,.clk(clk),.rst(rst),.ctrl(ctrl),.tmpr(tmpr));
+  
+         
+  reg [4:0] tmpx=5'b01111; int i=0,j=0 ,count=0;
+  reg [4:0] tmpy=5'b01111;
+  
+            always #5 clk=~clk;
+  
+              always @(posedge clk)
+                     begin
+                 if(count<=1)
+                     clk1=1;
+                    else
+                     clk1=0;
+      
+                 count=count+1;
+      
+                 if(count==5)
+                     count=0; 
+                       end
+       
+  
+  
+  
+             initial 
+              begin
+        
+    $dumpfile("dump.vcd");
+    $dumpvars(1);
+    
+      clk=0;   rst=0;  clk1=0;
+      x=0; ctrl=1;  y=0;
+                      #2 rst=1;
+    
+                end
+  
+                   initial 
+                    begin
+           #2 repeat (20) begin
+           #10   
+       x=tmpx[i]; i=i+1; y=tmpy[j]; ctrl=1;
+                     
+                       if(i==5)
+               begin i=0; j=j+1; ctrl=0; y=0;  end
+                        
+                       if(j==5)
+               begin      x=0; y=0;        end   
+             
+           end 
+           
+         end
+
+           
+  initial $monitor("clk =%b clk1=%b  x=%b y=%b result=%b time=%0d ",clk,clk1,x,y,result,$time);
+       
+  
+  initial #400 $finish;
+                                        
+    endmodule
